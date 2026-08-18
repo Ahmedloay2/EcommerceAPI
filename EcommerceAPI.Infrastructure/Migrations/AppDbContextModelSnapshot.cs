@@ -60,14 +60,16 @@ namespace EcommerceAPI.Infrastructure.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             ImageUrl = "https://www.flaticon.com/free-icon/electronics_1555401",
-                            Name = "Electronics"
+                            Name = "Electronics",
+                            Slug = "electronics"
                         },
                         new
                         {
                             Id = 2,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             ImageUrl = "https://www.flaticon.com/free-icon/electronics_1555401",
-                            Name = "Groceries"
+                            Name = "Groceries",
+                            Slug = "groceries"
                         });
                 });
 
@@ -87,9 +89,6 @@ namespace EcommerceAPI.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CategoryId1")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreationDate")
@@ -121,8 +120,6 @@ namespace EcommerceAPI.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("CategoryId1");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -322,11 +319,42 @@ namespace EcommerceAPI.Infrastructure.Migrations
                             FirstName = "admin",
                             Guid = new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"),
                             HashedPassword = "$2y$10$7rLSvRVyTQORapkDOqmkhetjF6H9lJHngr4hJMSM2lHObJbW5EQh6",
-                            IsActive = "True",
+                            IsActive = true,
                             LastName = "user",
                             PhoneNumber = "01200032134",
                             Role = "Admin"
                         });
+                });
+
+            modelBuilder.Entity("EcommerceAPI.Domain.Entities.UserActivity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserActivities");
                 });
 
             modelBuilder.Entity("EcommerceAPI.Domain.Entities.UserAddress", b =>
@@ -409,14 +437,10 @@ namespace EcommerceAPI.Infrastructure.Migrations
             modelBuilder.Entity("EcommerceAPI.Domain.Entities.Product", b =>
                 {
                     b.HasOne("EcommerceAPI.Domain.Entities.Category", "Category")
-                        .WithMany()
+                        .WithMany("Products")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("EcommerceAPI.Domain.Entities.Category", null)
-                        .WithMany("Products")
-                        .HasForeignKey("CategoryId1");
 
                     b.Navigation("Category");
                 });
@@ -447,6 +471,24 @@ namespace EcommerceAPI.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EcommerceAPI.Domain.Entities.UserActivity", b =>
+                {
+                    b.HasOne("EcommerceAPI.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("EcommerceAPI.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
 
                     b.Navigation("User");
                 });
